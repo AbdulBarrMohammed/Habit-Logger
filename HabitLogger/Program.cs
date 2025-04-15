@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using Microsoft.Data.Sqlite;
@@ -57,18 +58,18 @@ class Program
                     Console.WriteLine("\nGoodbye!\n");
                     closeApp = true;
                     break;
-                /*
+
                 case "1":
                     GetAllRecords();
-                    break; */
+                    break;
                 case "2":
                     Insert();
                     break;
-                /*
+
                 case "3":
                     Delete();
                     break;
-                case "4":
+                /*case "4":
                     Update();
                     break; */
                 default:
@@ -115,4 +116,75 @@ class Program
 
     }
 
+    private static void GetAllRecords()
+    {
+        Console.Clear();
+        using (var connection = new SqliteConnection(connectionString)) {
+            connection.Open();
+            var tableCmd = connection.CreateCommand();
+            tableCmd.CommandText = $"SELECT * FROM drinking_water";
+            List<DrinkingWater> tableData = new();
+            SqliteDataReader reader = tableCmd.ExecuteReader();
+            if (reader.HasRows)
+            {
+                while (reader.Read())
+                {
+                    tableData.Add(
+                        new DrinkingWater
+                        {
+                            Id = reader.GetInt32(0),
+                            Date = DateTime.ParseExact(reader.GetString(1), "dd-MM-yy", new CultureInfo("en-US")),
+                            Quantity = reader.GetInt32(2)
+
+                        }
+                    );
+                }
+            } else {
+                Console.WriteLine("No rows found");
+            }
+
+            connection.Close();
+
+            Console.WriteLine("------------------------------------------\n");
+            foreach (var dw in tableData)
+            {
+                Console.WriteLine($"{dw.Id} - {dw.Date.ToString("dd-MMM-yyyy")} - Quantity: {dw.Quantity}");
+            }
+            Console.WriteLine("------------------------------------------\n");
+        }
+
+    }
+
+    private static void Delete()
+    {
+        Console.Clear();
+        GetAllRecords();
+
+        var recordId = GetNumberInput("\n\nPlease type the Id of the record you want to delete or type 0 to go to main menu");
+        using (var connection = new SqliteConnection(connectionString)) {
+            connection.Open();
+            var tableCmd = connection.CreateCommand();
+            tableCmd.CommandText = $"DELETE from drinking_water WHERE Id = '{recordId}'";
+
+            int rowCount = tableCmd.ExecuteNonQuery();
+            if (rowCount == 0)
+            {
+                System.Console.WriteLine($"\n\nRecord with Id {recordId} doesn't exist. \n\n");
+                Delete();
+            }
+
+
+        }
+        System.Console.WriteLine($"\n\nRecord with Id {recordId} was deleted. \n\n");
+        GetUserInput();
+    }
+
+
+}
+
+public class DrinkingWater
+{
+    public int Id {get; set;}
+    public DateTime Date {get; set;}
+    public int Quantity {get; set;}
 }
