@@ -1,0 +1,1 @@
+[{"stmt":"SELECT * FROM drinking_water;","header":["Id","Date","Quantity"],"rows":[["2","12-12-25","8"]]}]
